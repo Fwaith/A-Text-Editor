@@ -12,96 +12,113 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #ifdef _WIN32
 #include <windows.h>
-#elif __APPLE__
-#include <mach-o/dyld.h>  // For _NSGetExecutablePath
-#include <unistd.h>       // For exec permissions
+#else
+#include <sys/stat.h>
 #endif
 
-// Define the folder name and target command name
-#define FOLDER_NAME "A-Text-Editor"
+// GitHub repository link
+#define GITHUB_REPO "https://github.com/Fwaith/A-Text-Editor"
+#define GITHUB_ZIP_URL "https://github.com/Fwaith/A-Text-Editor/archive/refs/heads/main.zip"
+#define INSTALL_DIR "/usr/local/bin/"
 #define COMMAND_NAME "ate"
+#define TMP_FOLDER "A-Text-Editor-tmp"
 
-void install_self(const char *self_path) {
+// Function to check if a command exists
+int command_exists(const char *cmd) {
+    char buffer[128];
+    snprintf(buffer, sizeof(buffer), "command -v %s >/dev/null 2>&1", cmd);
+    return system(buffer) == 0;
+}
+
+// Function to download the latest release
+void download_latest_release() {
+    char command[512];
+#ifdef _WIN32
+    // Use PowerShell or curl to download on Windows
+    snprintf(command, sizeof(command), "curl -L -o main.zip %s", GITHUB_ZIP_URL);
+#else
+    // Use curl to download the zip file
+    snprintf(command, sizeof(command), "curl -L -o main.zip %s", GITHUB_ZIP_URL);
+#endif
+
+    printf("Downloading the latest release from %s...\n", GITHUB_REPO);
+    if (system(command) != 0) {
+        fprintf(stderr, "Error: Failed to download the latest release.\n");
+        exit(1);
+    }
+}
+
+// Function to extract the zip file
+void extract_zip_file() {
+#ifdef _WIN32
+    // Use PowerShell to extract on Windows
+    if (system("powershell -Command \"Expand-Archive -Path main.zip -DestinationPath .\"") != 0) {
+        fprintf(stderr, "Error: Failed to extract main.zip on Windows.\n");
+        exit(1);
+    }
+#else
+    // Use unzip to extract on macOS/Linux
+    if (system("unzip -o main.zip > /dev/null") != 0) {
+        fprintf(stderr, "Error: Failed to extract main.zip on macOS/Linux.\n");
+        exit(1);
+    }
+#endif
+}
+
+// Function to install the latest version
+void install_latest_version() {
     char install_path[512];
-    char command[1024];
+    snprintf(install_path, sizeof(install_path), "%s%s", INSTALL_DIR, COMMAND_NAME);
 
 #ifdef _WIN32
-    // On Windows, install to C:\Windows\ate.exe
-    snprintf(install_path, sizeof(install_path), "C:\\Windows\\%s.exe", COMMAND_NAME);
-
-    // Copy file to the install location
-    snprintf(command, sizeof(command), "copy \"%s\" \"%s\"", self_path, install_path);
-    if (system(command) != 0) {
-        fprintf(stderr, "Error: Failed to copy the file to %s. Try running as Administrator.\n", install_path);
-        exit(1);
-    }
-
-    printf("Successfully installed '%s' command on Windows! You can now use it globally.\n", COMMAND_NAME);
-
-#elif __APPLE__
-    // On macOS, install to /usr/local/bin/ate
-    snprintf(install_path, sizeof(install_path), "/usr/local/bin/%s", COMMAND_NAME);
-
-    // Copy file to install location
-    snprintf(command, sizeof(command), "cp \"%s\" \"%s\"", self_path, install_path);
-    if (system(command) != 0) {
-        fprintf(stderr, "Error: Failed to copy the file to %s. Try running with sudo.\n", install_path);
-        exit(1);
-    }
-
-    // Make the file executable
-    snprintf(command, sizeof(command), "chmod +x \"%s\"", install_path);
-    if (system(command) != 0) {
-        fprintf(stderr, "Error: Failed to set executable permissions on %s.\n", install_path);
-        exit(1);
-    }
-
-    printf("Successfully installed '%s' command on macOS! You can now use it globally.\n", COMMAND_NAME);
-
-#else
-    fprintf(stderr, "Error: Unsupported platform.\n");
-    exit(1);
-#endif
-}
-
-void get_self_path(char *buffer, size_t size) {
-#ifdef _WIN32
-    // Windows: Use GetModuleFileName to get the path of the current executable
-    if (!GetModuleFileName(NULL, buffer, (DWORD)size)) {
-        fprintf(stderr, "Error: Unable to determine the executable path.\n");
-        exit(1);
-    }
-#elif __APPLE__
-    // macOS: Use _NSGetExecutablePath to get the path of the current executable
-    uint32_t buffer_size = (uint32_t)size;
-    if (_NSGetExecutablePath(buffer, &buffer_size) != 0) {
-        fprintf(stderr, "Error: Path buffer too small.\n");
+    // Copy the executable to C:\Windows
+    if (system("copy A-Text-Editor-main\\Main.exe C:\\Windows\\ate.exe") != 0) {
+        fprintf(stderr, "Error: Failed to install 'ate' on Windows. Try running as Administrator.\n");
         exit(1);
     }
 #else
-    fprintf(stderr, "Error: Unsupported platform.\n");
-    exit(1);
-#endif
-}
-
-int main(int argc, char *argv[]) {
-    char self_path[512];
-
-    // Get the current executable's path
-    get_self_path(self_path, sizeof(self_path));
-
-    // Check if the executable is in the A-Text-Editor folder
-    if (strstr(self_path, FOLDER_NAME) == NULL) {
-        fprintf(stderr, "Error: The executable must be in the '%s' folder.\n", FOLDER_NAME);
+    // Move the executable to /usr/local/bin and make it executable
+    if (system("cp A-Text-Editor-main/Main ./ate && chmod +x ./ate && mv ./ate /usr/local/bin/") != 0) {
+        fprintf(stderr, "Error: Failed to install 'ate' on macOS/Linux. Try running with sudo.\n");
         exit(1);
     }
+#endif
 
-    // Install this executable globally as 'ate'
-    install_self(self_path);
+    printf("Successfully installed the latest version of 'ate'. You can now use it globally.\n");
+}
 
-    printf("Installation complete. You can now use the '%s' command globally!\n", COMMAND_NAME);
+// Function to check the current version
+void check_and_update() {
+    printf("Checking for an existing version of 'ate'...\n");
+
+    // Check if 'ate' already exists
+    if (command_exists(COMMAND_NAME)) {
+        printf("'ate' is already installed. Updating to the latest version...\n");
+    } else {
+        printf("'ate' is not installed. Installing now...\n");
+    }
+
+    // Download the latest release
+    download_latest_release();
+
+    // Extract the downloaded zip file
+    extract_zip_file();
+
+    // Install the latest version
+    install_latest_version();
+
+    // Cleanup temporary files
+    printf("Cleaning up temporary files...\n");
+    system("rm -rf A-Text-Editor-main main.zip");
+}
+
+int main() {
+    printf("Starting the installation process for 'A-Text-Editor'...\n");
+    check_and_update();
+    printf("Installation complete. You can now use 'ate' globally!\n");
     return 0;
 }
