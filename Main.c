@@ -6,6 +6,7 @@
 #include "Insert_line.h"
 #include "Show_change_log.h"
 #include "Show_file.h"
+#include "Show_help.h"
 #include "Show_line.h"
 #include "Show_number_of_lines.h"
 
@@ -20,7 +21,6 @@
 #include <sys/stat.h>
 #endif
 
-// GitHub repository link
 #define GITHUB_REPO "https://github.com/Fwaith/A-Text-Editor"
 #define GITHUB_ZIP_URL "https://github.com/Fwaith/A-Text-Editor/archive/refs/heads/main.zip"
 #define INSTALL_DIR "/usr/local/bin/"
@@ -44,7 +44,6 @@ void download_latest_release() {
     // Use curl to download the zip file
     snprintf(command, sizeof(command), "curl -L -o main.zip %s", GITHUB_ZIP_URL);
 #endif
-
     printf("Downloading the latest release from %s...\n", GITHUB_REPO);
     if (system(command) != 0) {
         fprintf(stderr, "Error: Failed to download the latest release.\n");
@@ -101,14 +100,8 @@ void check_and_update() {
     } else {
         printf("'ate' is not installed. Installing now...\n");
     }
-
-    // Download the latest release
     download_latest_release();
-
-    // Extract the downloaded zip file
     extract_zip_file();
-
-    // Install the latest version
     install_latest_version();
 
     // Cleanup temporary files
@@ -117,8 +110,23 @@ void check_and_update() {
 }
 
 int main() {
-    printf("Starting the installation process for 'A-Text-Editor'...\n");
-    check_and_update();
-    printf("Installation complete. You can now use 'ate' globally!\n");
+    char input[100];  // Buffer to store user input
+    int running = 0;  // Control variable for the loop
+
+    printf("Welcome to A-Text-Editor Command-Line Editor\n");
+    printf("Type 'ate help' for a full list of commands.\n");
+
+    while (running == 0) {
+        fgets(input ,sizeof(input) ,stdin);     
+        if (strcmp(input, "ate exit")==0) {
+            running = 1;
+        } 
+        elseif (strcmp(input, "ate help")==0) {
+            show_help();
+        } 
+        else {
+
+        }
+    }
     return 0;
 }
