@@ -130,7 +130,6 @@ void install() {
 #endif
 }
 
-// Uninstalls ate
 void uninstall() {
     if (!is_installed()) {
         printf("'ate' is not installed. Nothing to uninstall.\n");
@@ -141,31 +140,22 @@ void uninstall() {
     int executable_removed = 0; // Track if the executable is successfully removed
 
 #ifdef _WIN32
-    printf("Uninstalling 'ate' from %s...\n", INSTALL_PATH);
-
-    // Attempt to delete the executable directly
+    // Attempt to delete the executable
     if (DeleteFile(INSTALL_PATH)) {
         printf("Successfully uninstalled 'ate'.\n");
-        executable_removed = 1; // Mark as successfully removed
+        executable_removed = 1;
     } else {
-        // Retrieve and print the error code
         DWORD error_code = GetLastError();
-
-        switch (error_code) {
-            case ERROR_FILE_NOT_FOUND:
-                printf("Error: 'ate.exe' not found at %s. It may already be uninstalled.\n", INSTALL_PATH);
-                break;
-            case ERROR_ACCESS_DENIED:
-                printf("Error: Access denied. Try running the program as Administrator.\n");
-                break;
-            case ERROR_SHARING_VIOLATION:
-                printf("Error: File is being used by another process. Ensure no other application is using 'ate.exe' and try again.\n");
-                break;
-            default:
-                printf("Error: Failed to uninstall 'ate'. Error code: %lu.\n", error_code);
+        if (error_code == ERROR_FILE_NOT_FOUND) {
+            printf("Error: 'ate.exe' not found at %s. It may already be uninstalled.\n", INSTALL_PATH);
+        } else if (error_code == ERROR_ACCESS_DENIED) {
+            printf("Error: Access denied. Try running the program as Administrator.\n");
+        } else {
+            printf("Error: Failed to uninstall 'ate'. Error code: %lu.\n", error_code);
         }
     }
 #else
+    // Attempt to delete the executable on macOS/Linux
     if (remove(INSTALL_PATH) == 0) {
         printf("Successfully uninstalled 'ate'.\n");
         executable_removed = 1;
@@ -178,8 +168,6 @@ void uninstall() {
     if (executable_removed) {
         char source_directory[512];
         get_executable_directory(source_directory, sizeof(source_directory));
-        
-        // Ensure the directory is appended only once
 #ifdef _WIN32
         snprintf(source_directory, sizeof(source_directory), "%s\\A-Text-Editor", source_directory);
 #else
