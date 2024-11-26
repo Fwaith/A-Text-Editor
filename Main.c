@@ -25,7 +25,25 @@
 #define INSTALL_PATH_DEST "/usr/local/bin/ate" // Destination path
 #endif
 
+// Function to check if 'ate' is already installed
+int is_installed() {
+    #ifdef _WIN32
+    char command[256];
+    snprintf(command, sizeof(command), "where ate > nul 2>&1");
+    return (system(command) == 0);
+    #else
+    return (access("/usr/local/bin/ate", F_OK) == 0);
+    #endif
+}
+
+// Function to install the 'ate' command
 void install() {
+    // Check if 'ate' is already installed
+    if (is_installed()) {
+        printf("'ate' is already installed. Skipping installation.\n");
+        return;
+    }
+
     char command[256]; // Buffer to store the command
 
 #ifdef _WIN32
