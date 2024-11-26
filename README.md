@@ -4,7 +4,6 @@
 
 
 ## Installation
-
 ### Windows
 1. Clone the repo
 ```
