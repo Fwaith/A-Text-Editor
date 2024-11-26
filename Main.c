@@ -17,38 +17,90 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <tchar.h>
 #define INSTALL_PATH_SRC "ate.exe"
 #define INSTALL_PATH "C:\\Windows\\ate.exe"
 #else
 #include <sys/stat.h>
+#include <limits.h>
 #define INSTALL_PATH_SRC "./ate"
 #define INSTALL_PATH "/usr/local/bin/ate"
 #endif
 
-// Checks if ate is installed
-int is_installed() {
+// Function to get the directory of the currently running executable
+void get_executable_directory(char *buffer, size_t size) {
 #ifdef _WIN32
-    const char *path = "C:\\Windows\\ate.exe";
-    printf("Checking for 'ate.exe' in C:\\Windows...\n");
-
-    // Check if 'ate.exe' exists in C:\Windows
-    FILE *file = fopen(path, "r");
-    if (file) {
-        fclose(file);
-        printf("'ate.exe' found at: %s\n", path);
-        return 1;
+    if (GetModuleFileName(NULL, buffer, (DWORD)size) == 0) {
+        fprintf(stderr, "Error: Unable to get executable path.\n");
+        exit(1);
+    }
+    // Remove the executable name to get the directory
+    char *last_slash = strrchr(buffer, '\\');
+    if (last_slash) {
+        *last_slash = '\0';
     }
 #else
-    const char *path = "/usr/local/bin/ate";
-    printf("Checking for 'ate' in /usr/local/bin...\n");
-
-    // Check if 'ate' exists in /usr/local/bin
-    if (access(path, F_OK) == 0) {
-        return 1;
+    ssize_t len = readlink("/proc/self/exe", buffer, size - 1);
+    if (len == -1) {
+        perror("Error: Unable to get executable path");
+        exit(1);
+    }
+    buffer[len] = '\0';
+    // Remove the executable name to get the directory
+    char *last_slash = strrchr(buffer, '/');
+    if (last_slash) {
+        *last_slash = '\0';
     }
 #endif
-    printf("'ate' is not installed.\n");
-    return 0;
+}
+
+// Function to check if the program is installed
+int is_installed() {
+#ifdef _WIN32
+    FILE *file = fopen(INSTALL_PATH, "r");
+    if (file) {
+        fclose(file);
+        return 1; // File exists
+    }
+#else
+    if (access(INSTALL_PATH, F_OK) == 0) {
+        return 1; // File exists
+    }
+#endif
+    return 0; // File does not exist
+}
+
+// Function to delete a directory and its contents recursively
+int delete_directory(const char *path) {
+#ifdef _WIN32
+    char command[512];
+    snprintf(command, sizeof(command), "rmdir /S /Q \"%s\"", path);
+    return system(command) == 0; // Use rmdir command on Windows
+#else
+    DIR *dir = opendir(path);
+    if (!dir) return -1;
+
+    struct dirent *entry;
+    char filepath[512];
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+
+        snprintf(filepath, sizeof(filepath), "%s/%s", path, entry->d_name);
+        if (entry->d_type == DT_DIR) {
+            if (delete_directory(filepath) != 0) {
+                closedir(dir);
+                return -1; // Recursively delete subdirectories
+            }
+        } else {
+            if (remove(filepath) != 0) {
+                closedir(dir);
+                return -1; // Delete file
+            }
+        }
+    }
+    closedir(dir);
+    return rmdir(path); // Delete the directory itself
+#endif
 }
 
 // Installs ate
@@ -77,38 +129,27 @@ void install() {
 #endif
 }
 
-// Function to delete a directory and its contents recursively
-int delete_directory(const char *path) {
-#ifdef _WIN32
-    char command[512];
-    snprintf(command, sizeof(command), "rmdir /S /Q \"%s\"", path);
-    return system(command) == 0; // Use rmdir command on Windows
-#else
-    DIR *dir = opendir(path);
-    if (!dir) return -1;
+void uninstall_ate_on_windows() {
+    printf("Uninstalling 'ate' from %s...\n", INSTALL_PATH);
 
-    struct dirent *entry;
-    char filepath[512];
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+    // Attempt to delete the executable
+    if (DeleteFile(INSTALL_PATH)) {
+        printf("Successfully uninstalled 'ate'.\n");
+    } else {
+        // If DeleteFile fails, retrieve and print the error code
+        DWORD error_code = GetLastError();
 
-        snprintf(filepath, sizeof(filepath), "%s/%s", path, entry->d_name);
-        if (entry->d_type == DT_DIR) {
-            if (delete_directory(filepath) != 0) {
-                closedir(dir);
-                return -1; // Recursively delete subdirectories
-            }
-        } 
-        else {
-            if (remove(filepath) != 0) {
-                closedir(dir);
-                return -1; // Delete file
-            }
+        switch (error_code) {
+            case ERROR_FILE_NOT_FOUND:
+                printf("Error: 'ate.exe' not found at %s. It may already be uninstalled.\n", INSTALL_PATH);
+                break;
+            case ERROR_ACCESS_DENIED:
+                printf("Error: Access denied. Try running the program as Administrator.\n");
+                break;
+            default:
+                printf("Error: Failed to uninstall 'ate'. Error code: %lu. Try running as Administrator.\n", error_code);
         }
     }
-    closedir(dir);
-    return rmdir(path); // Delete the directory itself
-#endif
 }
 
 // Uninstalls ate
@@ -122,30 +163,30 @@ void uninstall() {
     int executable_removed = 0; // Track if the executable is successfully removed
 
 #ifdef _WIN32
-    if (DeleteFile(INSTALL_PATH)) {
-        printf("Successfully uninstalled 'ate'.\n");
-        executable_removed = 1;
-    } 
-    else {
-        printf("Error: Failed to uninstall 'ate'. Try running as Administrator.\n");
-    }
+    uninstall_ate_on_windows();
 #else
     if (remove(INSTALL_PATH) == 0) {
         printf("Successfully uninstalled 'ate'.\n");
         executable_removed = 1;
-    } 
-    else {
+    } else {
         printf("Error: Failed to uninstall 'ate'. Try running with sudo.\n");
     }
 #endif
 
     // Only remove source files if the executable was removed
     if (executable_removed) {
-        printf("Removing source files from %s...\n", SOURCE_DIRECTORY);
-        if (delete_directory(SOURCE_DIRECTORY) == 0) {
+        char source_directory[512];
+        get_executable_directory(source_directory, sizeof(source_directory));
+#ifdef _WIN32
+        strcat(source_directory, "\\A-Text-Editor"); // Append the source directory name
+#else
+        strcat(source_directory, "/A-Text-Editor"); // Append the source directory name
+#endif
+
+        printf("Removing source files from %s...\n", source_directory);
+        if (delete_directory(source_directory) == 0) {
             printf("Successfully removed source files.\n");
-        } 
-        else {
+        } else {
             printf("Error: Failed to remove source files. Ensure you have the necessary permissions.\n");
         }
     }
