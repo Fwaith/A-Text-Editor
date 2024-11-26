@@ -22,6 +22,9 @@ git clone https://github.com/Fwaith/A-Text-Editor.git
 ### 2. Compile and run the code
 In the terminal (administrator), go to the directory where the installed file is located and run the commands.
 ```
+cd A-Text-Editor
+```
+```
 gcc -o ate *.c
 ```
 ```
