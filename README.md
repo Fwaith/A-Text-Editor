@@ -44,3 +44,5 @@ Check the spelling of the name, or if a path was included, verify that the path 
 Then that means step 2 was done incorrectly.
 
 ## Deletion
+
+## Commands
