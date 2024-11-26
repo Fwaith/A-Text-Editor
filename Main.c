@@ -27,14 +27,24 @@
 
 // Function to check if 'ate' is already installed
 int is_installed() {
-    #ifdef _WIN32
-    char command[256];
-    snprintf(command, sizeof(command), "where ate > nul 2>&1");
-    return (system(command) == 0);
-    #else
-    return (access("/usr/local/bin/ate", F_OK) == 0);
-    #endif
+#ifdef _WIN32
+    return (system("where ate >nul 2>&1") == 0);
+#else
+    char *path = getenv("PATH");
+    char full_path[512];
+    if (!path) return 0;
+    char *dir = strtok(path, ":");
+    while (dir) {
+        snprintf(full_path, sizeof(full_path), "%s/ate", dir);
+        if (access(full_path, F_OK) == 0) {
+            return 1;
+        }
+        dir = strtok(NULL, ":");
+    }
+    return 0;
+#endif
 }
+
 
 // Function to install the 'ate' command
 void install() {
@@ -82,7 +92,7 @@ int main() {
             show_help();
         } 
         else {
-            printf("Invalid command");
+            printf("Invalid command\n");
         }
     }
     return 0;
