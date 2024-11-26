@@ -7,3 +7,5 @@
 2.
 
 ### macOS
+
+## Deletion
