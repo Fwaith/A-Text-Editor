@@ -1,5 +1,8 @@
 # A-Text-Editor
 
+## Prerequisites
+
+
 ## Installation
 
 ### Windows
