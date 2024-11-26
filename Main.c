@@ -82,7 +82,7 @@ int main() {
             show_help();
         } 
         else {
-
+            printf("Invalid command");
         }
     }
     return 0;
