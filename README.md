@@ -7,7 +7,7 @@ To make downloading easy. In this guide [git (not a package manager)](https://gi
 ### A C Language Compiler
 To compile and run C. In this guide [gcc](https://gcc.gnu.org/install/) is used.
 ### Administrator Privileges
-This is needed to add an executable to the system files so that the program can be run globally by entering the 'ate' command. If this is not done, the program can only be run from its directory, however, the 'ate' command that allows the program to run globally will not work. 
+This is needed to add an executable to the system files so that the program can be run globally by entering the 'ate' command. If this is not done, the program can only be run from its directory, however, the 'ate' command that allows the program to run globally will not exist.
 
 ## Installation
 ### 1. Download the source files
@@ -20,7 +20,7 @@ Clone the repo
 git clone https://github.com/Fwaith/A-Text-Editor.git
 ```
 ### 2. Compile and run the code
-In the terminal (administrator), go to the directory where the installed file is located and run the commands.
+In the terminal (administrator), go to the directory where the installed file is located and then run the commands.
 ```
 cd A-Text-Editor
 ```
