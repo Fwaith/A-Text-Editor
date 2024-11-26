@@ -17,33 +17,38 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#define INSTALL_PATH "C:\\Windows\\ate.exe"
+#define INSTALL_PATH_SRC "ate.exe" // Source path of the executable
+#define INSTALL_PATH_DEST "C:\\Windows\\ate.exe" // Destination path
 #else
 #include <sys/stat.h>
-#define INSTALL_PATH "/usr/local/bin/ate"
+#define INSTALL_PATH_SRC "./ate" // Source path of the executable
+#define INSTALL_PATH_DEST "/usr/local/bin/ate" // Destination path
 #endif
+
+void install() {
+    char command[256]; // Buffer to store the command
 
 #ifdef _WIN32
     // Copy the executable to C:\Windows
-    snprintf(command, sizeof(command), "copy \"%s\" \"%s\"", INSTALL_PATH);
+    snprintf(command, sizeof(command), "copy \"%s\" \"%s\"", INSTALL_PATH_SRC, INSTALL_PATH_DEST);
     if (system(command) == 0) {
         printf("Successfully installed 'ate' command. You can now use it globally.\n");
-    }
-    else {
+    } else {
         printf("Error: Failed to install 'ate'. Try running as Administrator.\n");
     }
 #else
     // Move the executable to /usr/local/bin
-    snprintf(command, sizeof(command), "sudo mv \"%s\" \"%s\"", INSTALL_PATH);
+    snprintf(command, sizeof(command), "sudo mv \"%s\" \"%s\"", INSTALL_PATH_SRC, INSTALL_PATH_DEST);
     if (system(command) == 0) {
         printf("Successfully installed 'ate' command. You can now use it globally.\n");
-    }
-    else {
+    } else {
         printf("Error: Failed to install 'ate'. Try running with sudo.\n");
     }
 #endif
+}
 
 int main() {
+    install();
     char input[100];  // Buffer to store user input
     int running = 0;  // Control variable for the loop
 
