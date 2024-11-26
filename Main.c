@@ -26,19 +26,25 @@
 #endif
 
 int is_installed() {
-    char buffer[MAX_PATH]; // Buffer to hold the full path of the executable
-
 #ifdef _WIN32
-    printf("Checking for 'ate.exe' in PATH...\n");
-    if (SearchPath(NULL, "ate.exe", NULL, MAX_PATH, buffer, NULL) != 0) {
-        printf("'ate.exe' found at: %s\n", buffer);
-        return 1; // Found 'ate.exe'
+    const char *path = "C:\\Windows\\ate.exe"; // Path to check on Windows
+    printf("Checking for 'ate.exe' in C:\\Windows...\n");
+
+    // Check if 'ate.exe' exists in C:\Windows
+    FILE *file = fopen(path, "r");
+    if (file) {
+        fclose(file);
+        printf("'ate.exe' found at: %s\n", path);
+        return 1; // Found
     }
 #else
+    const char *path = "/usr/local/bin/ate"; // Path to check on macOS/Linux
     printf("Checking for 'ate' in /usr/local/bin...\n");
-    if (access("/usr/local/bin/ate", F_OK) == 0) {
-        printf("'ate' found at /usr/local/bin/ate\n");
-        return 1;
+
+    // Check if 'ate' exists in /usr/local/bin
+    if (access(path, F_OK) == 0) {
+        printf("'ate' found at: %s\n", path);
+        return 1; // Found
     }
 #endif
     printf("'ate' is not installed.\n");
