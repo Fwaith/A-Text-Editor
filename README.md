@@ -3,4 +3,7 @@
 ## Installation
 
 ### Windows
+1.
+2.
+
 ### macOS
