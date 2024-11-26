@@ -10,9 +10,9 @@ This is needed to add an executable to the system files so that the program can 
 
 ## Installation
 ### Windows
-1. Download the source files
-
-   or
+1. Download the source files directly
+      or
+Cloning the repo
 ```
 git clone https://github.com/Fwaith/A-Text-Editor.git
 ```
