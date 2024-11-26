@@ -18,6 +18,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <tchar.h>
+#include <aclapi.h>
 #define INSTALL_PATH_SRC "ate.exe"
 #define INSTALL_PATH "C:\\Windows\\ate.exe"
 #else
@@ -129,29 +130,6 @@ void install() {
 #endif
 }
 
-void uninstall_ate_on_windows() {
-    printf("Uninstalling 'ate' from %s...\n", INSTALL_PATH);
-
-    // Attempt to delete the executable
-    if (DeleteFile(INSTALL_PATH)) {
-        printf("Successfully uninstalled 'ate'.\n");
-    } else {
-        // If DeleteFile fails, retrieve and print the error code
-        DWORD error_code = GetLastError();
-
-        switch (error_code) {
-            case ERROR_FILE_NOT_FOUND:
-                printf("Error: 'ate.exe' not found at %s. It may already be uninstalled.\n", INSTALL_PATH);
-                break;
-            case ERROR_ACCESS_DENIED:
-                printf("Error: Access denied. Try running the program as Administrator.\n");
-                break;
-            default:
-                printf("Error: Failed to uninstall 'ate'. Error code: %lu. Try running as Administrator.\n", error_code);
-        }
-    }
-}
-
 // Uninstalls ate
 void uninstall() {
     if (!is_installed()) {
@@ -163,7 +141,30 @@ void uninstall() {
     int executable_removed = 0; // Track if the executable is successfully removed
 
 #ifdef _WIN32
-    uninstall_ate_on_windows();
+    printf("Uninstalling 'ate' from %s...\n", INSTALL_PATH);
+
+    // Attempt to delete the executable directly
+    if (DeleteFile(INSTALL_PATH)) {
+        printf("Successfully uninstalled 'ate'.\n");
+        executable_removed = 1; // Mark as successfully removed
+    } else {
+        // Retrieve and print the error code
+        DWORD error_code = GetLastError();
+
+        switch (error_code) {
+            case ERROR_FILE_NOT_FOUND:
+                printf("Error: 'ate.exe' not found at %s. It may already be uninstalled.\n", INSTALL_PATH);
+                break;
+            case ERROR_ACCESS_DENIED:
+                printf("Error: Access denied. Try running the program as Administrator.\n");
+                break;
+            case ERROR_SHARING_VIOLATION:
+                printf("Error: File is being used by another process. Ensure no other application is using 'ate.exe' and try again.\n");
+                break;
+            default:
+                printf("Error: Failed to uninstall 'ate'. Error code: %lu.\n", error_code);
+        }
+    }
 #else
     if (remove(INSTALL_PATH) == 0) {
         printf("Successfully uninstalled 'ate'.\n");
@@ -213,7 +214,7 @@ int main() {
             uninstall();
         }
         else {
-            printf("Invalid command\n");
+            printf("Error: Invalid command\n");
         }
     }
     return 0;
