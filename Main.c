@@ -25,26 +25,13 @@
 #define INSTALL_PATH_DEST "/usr/local/bin/ate" // Destination path
 #endif
 
-// Function to check if 'ate' is already installed
 int is_installed() {
 #ifdef _WIN32
     return (system("where ate >nul 2>&1") == 0);
 #else
-    char *path = getenv("PATH");
-    char full_path[512];
-    if (!path) return 0;
-    char *dir = strtok(path, ":");
-    while (dir) {
-        snprintf(full_path, sizeof(full_path), "%s/ate", dir);
-        if (access(full_path, F_OK) == 0) {
-            return 1;
-        }
-        dir = strtok(NULL, ":");
-    }
     return 0;
 #endif
 }
-
 
 // Function to install the 'ate' command
 void install() {
@@ -53,7 +40,6 @@ void install() {
         printf("'ate' is already installed. Skipping installation.\n");
         return;
     }
-
     char command[256]; // Buffer to store the command
 
 #ifdef _WIN32
@@ -84,7 +70,8 @@ int main() {
     printf("Type 'ate help' for a full list of commands.\n");
 
     while (running == 0) {
-        fgets(input ,sizeof(input) ,stdin);     
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = 0;    
         if (strcmp(input, "ate exit")==0) {
             running = 1;
         } 
