@@ -164,14 +164,20 @@ void uninstall() {
     }
 #endif
 
-    // Only remove source files if the executable was removed
+        // Only remove source files if the executable was removed
     if (executable_removed) {
         char source_directory[512];
         get_executable_directory(source_directory, sizeof(source_directory));
+
 #ifdef _WIN32
-        snprintf(source_directory, sizeof(source_directory), "%s\\A-Text-Editor", source_directory);
+        // Check if the path already contains "A-Text-Editor" to avoid double appending
+        if (strstr(source_directory, "\\A-Text-Editor") == NULL) {
+            snprintf(source_directory, sizeof(source_directory), "%s\\A-Text-Editor", source_directory);
+        }
 #else
-        snprintf(source_directory, sizeof(source_directory), "%s/A-Text-Editor", source_directory);
+        if (strstr(source_directory, "/A-Text-Editor") == NULL) {
+            snprintf(source_directory, sizeof(source_directory), "%s/A-Text-Editor", source_directory);
+        }
 #endif
 
         printf("Removing source files from %s...\n", source_directory);
