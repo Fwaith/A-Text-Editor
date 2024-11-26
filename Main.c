@@ -26,11 +26,13 @@
 #endif
 
 int is_installed() {
-#ifdef _WIN32
-    return (system("where ate >nul 2>&1") == 0);
-#else
-    return 0;
-#endif
+    char buffer[MAX_PATH]; // Buffer to hold the full path of the executable
+
+    // Use SearchPath to find 'ate.exe' in the PATH
+    if (SearchPath(NULL, "ate.exe", NULL, MAX_PATH, buffer, NULL) != 0) {
+        return 1; // Found 'ate.exe'
+    }
+    return 0; // Not found
 }
 
 // Function to install the 'ate' command
