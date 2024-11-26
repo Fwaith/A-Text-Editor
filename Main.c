@@ -69,7 +69,7 @@ int is_installed() {
     }
 #endif
     return 0; // File does not exist
-}
+} 
 
 // Function to delete a directory and its contents recursively
 int delete_directory(const char *path) {
@@ -178,10 +178,12 @@ void uninstall() {
     if (executable_removed) {
         char source_directory[512];
         get_executable_directory(source_directory, sizeof(source_directory));
+        
+        // Ensure the directory is appended only once
 #ifdef _WIN32
-        strcat(source_directory, "\\A-Text-Editor"); // Append the source directory name
+        snprintf(source_directory, sizeof(source_directory), "%s\\A-Text-Editor", source_directory);
 #else
-        strcat(source_directory, "/A-Text-Editor"); // Append the source directory name
+        snprintf(source_directory, sizeof(source_directory), "%s/A-Text-Editor", source_directory);
 #endif
 
         printf("Removing source files from %s...\n", source_directory);
