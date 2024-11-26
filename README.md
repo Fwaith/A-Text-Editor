@@ -1,9 +1,11 @@
 # A-Text-Editor
 
 ## Prerequisites
-1. e
-2. A C Language Compiler
-3. Administrator Privileges
+**Note: Not all of these are necessary, some are here purely for convenience.**
+### 
+### A C Language Compiler
+### Administrator Privileges
+This is needed to add an executable to the   so that the program can be run globally. With  . The program can still
 
 ## Installation
 ### Windows
