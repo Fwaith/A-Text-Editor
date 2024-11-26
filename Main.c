@@ -28,24 +28,31 @@
 int is_installed() {
     char buffer[MAX_PATH]; // Buffer to hold the full path of the executable
 
-    // Use SearchPath to find 'ate.exe' in the PATH
+#ifdef _WIN32
+    printf("Checking for 'ate.exe' in PATH...\n");
     if (SearchPath(NULL, "ate.exe", NULL, MAX_PATH, buffer, NULL) != 0) {
+        printf("'ate.exe' found at: %s\n", buffer);
         return 1; // Found 'ate.exe'
     }
+#else
+    printf("Checking for 'ate' in /usr/local/bin...\n");
+    if (access("/usr/local/bin/ate", F_OK) == 0) {
+        printf("'ate' found at /usr/local/bin/ate\n");
+        return 1;
+    }
+#endif
+    printf("'ate' is not installed.\n");
     return 0; // Not found
 }
 
-// Function to install the 'ate' command
 void install() {
-    // Check if 'ate' is already installed
     if (is_installed()) {
         printf("'ate' is already installed. Skipping installation.\n");
         return;
     }
-    char command[256]; // Buffer to store the command
+    char command[512];
 
 #ifdef _WIN32
-    // Copy the executable to C:\Windows
     snprintf(command, sizeof(command), "copy \"%s\" \"%s\"", INSTALL_PATH_SRC, INSTALL_PATH_DEST);
     if (system(command) == 0) {
         printf("Successfully installed 'ate' command. You can now use it globally.\n");
@@ -53,7 +60,6 @@ void install() {
         printf("Error: Failed to install 'ate'. Try running as Administrator.\n");
     }
 #else
-    // Move the executable to /usr/local/bin
     snprintf(command, sizeof(command), "sudo mv \"%s\" \"%s\"", INSTALL_PATH_SRC, INSTALL_PATH_DEST);
     if (system(command) == 0) {
         printf("Successfully installed 'ate' command. You can now use it globally.\n");
