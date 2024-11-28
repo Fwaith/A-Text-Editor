@@ -2,6 +2,7 @@
 #define FILE_OPERATIONS_H
 
 #include <stdio.h>
+#include <string.h>
 
 void create_file(char arguments[]);
 

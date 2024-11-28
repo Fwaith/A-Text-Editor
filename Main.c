@@ -84,13 +84,14 @@ void split_input(char *input, char *command, char *arguments) {
 void help() {
     printf("-------------------------\n");
     printf("| Full list of commands |\n");
-    printf("-------------------------\n");
-    printf("\nTo enter a command, type ate <command>.\n");
+    printf("-------------------------");
+    printf("\nTo enter a command, type ate <command>\n");
     printf("\tExample: ate help\n");
     printf("\nate (by itself) - Opens the editor\n");
     printf("create <file name> - Creates a single file given that it doesn't already exist\n");
     printf("exit - Exits and ends the current running instance of the editor\n");
     printf("help - Displays all the commands along with its description\n");
+    printf("listf - Lists all files in the current directory along with other relevant information\n");
 }
 
 int main() {
@@ -121,6 +122,9 @@ int main() {
         }
         else if (strcmp(command, "help")==0) {
             help();
+        }
+        else if (strcmp(command, "listf")==0) {
+            listf();
         }
         else {
             printf("Error: Invalid command\n");
