@@ -1,14 +1,6 @@
-#include "Append_file.h"
-#include "Copy_file.h"
-#include "Create_file.h"
-#include "Delete_file.h"
-#include "Delete_line.h"
-#include "Insert_line.h"
-#include "Show_change_log.h"
-#include "Show_file.h"
-#include "Show_help.h"
-#include "Show_line.h"
-#include "Show_number_of_lines.h"
+#include "File_operations.h"
+#include "Line_operations.h"
+#include "Other_operations.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,43 +9,13 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#include <tchar.h>
-#include <aclapi.h>
 #define INSTALL_PATH_SRC "ate.exe"
 #define INSTALL_PATH "C:\\Windows\\ate.exe"
 #else
 #include <sys/stat.h>
-#include <limits.h>
 #define INSTALL_PATH_SRC "./ate"
 #define INSTALL_PATH "/usr/local/bin/ate"
 #endif
-
-// Function to get the directory of the currently running executable
-void get_executable_directory(char *buffer, size_t size) {
-#ifdef _WIN32
-    if (GetModuleFileName(NULL, buffer, (DWORD)size) == 0) {
-        fprintf(stderr, "Error: Unable to get executable path.\n");
-        exit(1);
-    }
-    // Remove the executable name to get the directory
-    char *last_slash = strrchr(buffer, '\\');
-    if (last_slash) {
-        *last_slash = '\0';
-    }
-#else
-    ssize_t len = readlink("/proc/self/exe", buffer, size - 1);
-    if (len == -1) {
-        perror("Error: Unable to get executable path");
-        exit(1);
-    }
-    buffer[len] = '\0';
-    // Remove the executable name to get the directory
-    char *last_slash = strrchr(buffer, '/');
-    if (last_slash) {
-        *last_slash = '\0';
-    }
-#endif
-}
 
 // Function to check if the program is installed
 int is_installed() {
@@ -61,47 +23,14 @@ int is_installed() {
     FILE *file = fopen(INSTALL_PATH, "r");
     if (file) {
         fclose(file);
-        return 1; // File exists
+        return 1;
     }
 #else
     if (access(INSTALL_PATH, F_OK) == 0) {
-        return 1; // File exists
+        return 1;
     }
 #endif
-    return 0; // File does not exist
-} 
-
-// Function to delete a directory and its contents recursively
-int delete_directory(const char *path) {
-#ifdef _WIN32
-    char command[512];
-    snprintf(command, sizeof(command), "rmdir /S /Q \"%s\"", path);
-    return system(command) == 0; // Use rmdir command on Windows
-#else
-    DIR *dir = opendir(path);
-    if (!dir) return -1;
-
-    struct dirent *entry;
-    char filepath[512];
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
-
-        snprintf(filepath, sizeof(filepath), "%s/%s", path, entry->d_name);
-        if (entry->d_type == DT_DIR) {
-            if (delete_directory(filepath) != 0) {
-                closedir(dir);
-                return -1; // Recursively delete subdirectories
-            }
-        } else {
-            if (remove(filepath) != 0) {
-                closedir(dir);
-                return -1; // Delete file
-            }
-        }
-    }
-    closedir(dir);
-    return rmdir(path); // Delete the directory itself
-#endif
+    return 0;
 }
 
 // Installs ate
@@ -130,84 +59,68 @@ void install() {
 #endif
 }
 
-void uninstall() {
-    if (!is_installed()) {
-        printf("'ate' is not installed. Nothing to uninstall.\n");
-        return;
+void split_input(char *input, char *command, char *arguments) {
+    // Remove the "ate " prefix
+    if (strncmp(input, "ate ", 4) == 0) {
+        input += 4; // Move the pointer to skip "ate "
     }
-    printf("Uninstalling 'ate' from %s...\n", INSTALL_PATH);
-
-    int executable_removed = 0; // Track if the executable is successfully removed
-
-#ifdef _WIN32
-    // Attempt to delete the executable
-    if (DeleteFile(INSTALL_PATH)) {
-        printf("Successfully uninstalled 'ate'.\n");
-        executable_removed = 1;
-    } else {
-        DWORD error_code = GetLastError();
-        if (error_code == ERROR_FILE_NOT_FOUND) {
-            printf("Error: 'ate.exe' not found at %s. It may already be uninstalled.\n", INSTALL_PATH);
-        } else if (error_code == ERROR_ACCESS_DENIED) {
-            printf("Error: Access denied. Try running the program as Administrator.\n");
-        } else {
-            printf("Error: Failed to uninstall 'ate'. Error code: %lu.\n", error_code);
-        }
+    // Find the first space in the remaining input
+    char *space = strchr(input, ' ');
+    if (space != NULL) {
+        // Split into command and arguments
+        size_t command_length = space - input;
+        strncpy(command, input, command_length);
+        command[command_length] = '\0'; 
+        // Copy the remaining part as arguments
+        strcpy(arguments, space + 1);
+    } 
+    else {
+        // No space found, the entire input is the command
+        strcpy(command, input);
+        arguments[0] = '\0'; // No arguments
     }
-#else
-    // Attempt to delete the executable on macOS/Linux
-    if (remove(INSTALL_PATH) == 0) {
-        printf("Successfully uninstalled 'ate'.\n");
-        executable_removed = 1;
-    } else {
-        printf("Error: Failed to uninstall 'ate'. Try running with sudo.\n");
-    }
-#endif
+}
 
-        // Only remove source files if the executable was removed
-    if (executable_removed) {
-        char source_directory[512];
-        get_executable_directory(source_directory, sizeof(source_directory));
-
-#ifdef _WIN32
-        // Check if the path already contains "A-Text-Editor" to avoid double appending
-        if (strstr(source_directory, "\\A-Text-Editor") == NULL) {
-            snprintf(source_directory, sizeof(source_directory), "%s\\A-Text-Editor", source_directory);
-        }
-#else
-        if (strstr(source_directory, "/A-Text-Editor") == NULL) {
-            snprintf(source_directory, sizeof(source_directory), "%s/A-Text-Editor", source_directory);
-        }
-#endif
-
-        printf("Removing source files from %s...\n", source_directory);
-        if (delete_directory(source_directory) == 0) {
-            printf("Successfully removed source files.\n");
-        } else {
-            printf("Error: Failed to remove source files. Ensure you have the necessary permissions.\n");
-        }
-    }
+void help() {
+    printf("-------------------------\n");
+    printf("| Full list of commands |\n");
+    printf("-------------------------\n");
+    printf("\nTo enter a command, type ate <command>.\n");
+    printf("\tExample: ate help\n");
+    printf("\nate (by itself) - Opens the editor\n");
+    printf("create <file name> - Creates a single file given that it doesn't already exist\n");
+    printf("exit - Exits and ends the current running instance of the editor\n");
+    printf("help - Displays all the commands along with its description\n");
 }
 
 int main() {
     install();
-    char input[100];
     int running = 0;
-
     printf("Welcome to the A-Text-Editor Command-Line Editor\n");
     printf("Type 'ate help' for a full list of commands.\n");
-
     while (running == 0) {
+        char input[256];
+        char command[56];
+        char arguments[200];
+
+        printf(">>");
+        printf(" ");
+
         fgets(input, sizeof(input), stdin);
-        input[strcspn(input, "\n")] = 0;    
-        if (strcmp(input, "ate exit")==0) {
+        // Removes newline character
+        input[strcspn(input, "\n")] = 0;
+        split_input(input, command, arguments);
+        printf("Command: %s\n", command);
+        printf("Arguments: %s\n", arguments);   
+
+        if (strcmp(command, "exit")==0) {
             running = 1;
         }
-        else if (strcmp(input, "ate help")==0) {
-            show_help();
+        else if (strcmp(command, "create")==0) {
+            create_file(arguments);
         }
-        else if (strcmp(input, "ate uninstall")==0){
-            uninstall();
+        else if (strcmp(command, "help")==0) {
+            help();
         }
         else {
             printf("Error: Invalid command\n");
