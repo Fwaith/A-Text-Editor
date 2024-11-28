@@ -6,7 +6,7 @@
 
 void show_change_log();
 
-void show_number_of_lines();
+void number_of_lines(char arguments[]);
 
 void listf();
 

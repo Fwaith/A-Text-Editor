@@ -19,12 +19,14 @@
 
 // Function to check if the program is installed
 int is_installed() {
+// For Windows devices
 #ifdef _WIN32
     FILE *file = fopen(INSTALL_PATH, "r");
     if (file) {
         fclose(file);
         return 1;
     }
+// For macOS devices
 #else
     if (access(INSTALL_PATH, F_OK) == 0) {
         return 1;
@@ -40,6 +42,7 @@ void install() {
     }
     char command[512];
 
+// For Windows devices
 #ifdef _WIN32
     snprintf(command, sizeof(command), "copy \"%s\" \"%s\"", INSTALL_PATH_SRC, INSTALL_PATH);
     if (system(command) == 0) {
@@ -48,6 +51,7 @@ void install() {
     else {
         printf("Error: Failed to install 'ate'. Try running as Administrator.\n");
     }
+// For macOS devices
 #else
     snprintf(command, sizeof(command), "sudo mv \"%s\" \"%s\"", INSTALL_PATH_SRC, INSTALL_PATH);
     if (system(command) == 0) {
@@ -89,6 +93,8 @@ void help() {
     printf("\tExample: ate help\n");
     printf("\nate (by itself) - Opens the editor\n");
     printf("create <file name> - Creates a single file given that it doesn't already exist\n");
+    printf("copy <file name> - Creates a copy of a file\n");
+    printf("delete <file name> - Deletes a file\n");
     printf("exit - Exits and ends the current running instance of the editor\n");
     printf("help - Displays all the commands along with its description\n");
     printf("listf - Lists all files in the current directory along with other relevant information\n");
@@ -100,25 +106,36 @@ int main() {
     printf("Welcome to the A-Text-Editor Command-Line Editor\n");
     printf("Type 'ate help' for a full list of commands.\n");
     while (running == 0) {
+        // Input buffers
         char input[256];
         char command[56];
         char arguments[200];
-
+        // Prompt
         printf(">>");
         printf(" ");
-
         fgets(input, sizeof(input), stdin);
         // Removes newline character
         input[strcspn(input, "\n")] = 0;
+        // Splits input to its 'command' and 'argument'
         split_input(input, command, arguments);
+        // To help see what the command and argument is (will remove later)
         printf("Command: %s\n", command);
         printf("Arguments: %s\n", arguments);   
-
+        // Checks the command
         if (strcmp(command, "exit")==0) {
             running = 1;
         }
         else if (strcmp(command, "create")==0) {
             create_file(arguments);
+        }
+        else if (strcmp(command, "copy")==0) {
+            copy_file(arguments);
+        }
+        else if (strcmp(command, "delete")==0) {
+            delete_file(arguments);
+        }
+        else if (strcmp(command, "show")==0) {
+            show_file(arguments);
         }
         else if (strcmp(command, "help")==0) {
             help();

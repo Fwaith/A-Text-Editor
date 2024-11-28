@@ -6,10 +6,10 @@
 
 void create_file(char arguments[]);
 
-void copy_file();
+void copy_file(char arguments[]);
 
-void delete_file();
+void delete_file(char arguments[]);
 
-void show_file();
+void show_file(char arguments[]);
 
 #endif
