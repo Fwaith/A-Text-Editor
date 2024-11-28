@@ -49,9 +49,9 @@ Then that means step 2 was done incorrectly.
 ## Deletion
 
 ### 1. Delete the executable
-On Windows: "C:\\Windows\\ate.exe"
+On Windows: C:\\Windows\\ate.exe
 
-On macOS: "/usr/local/bin/ate"
+On macOS: /usr/local/bin/ate
 ### 2. Delete the source files
 Wherever you downloaded it
 
