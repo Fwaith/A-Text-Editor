@@ -1,4 +1,5 @@
 #include "File_operations.h"
+#include "Other_operations.h"
 
 void create_file(char arguments[]) {  
     FILE *file = fopen(arguments, "r");
@@ -93,13 +94,40 @@ void delete_file(char arguments[]) {
 
 void show_file(char arguments[]) {
     FILE *file = fopen(arguments, "r");
-    // If the file exists
-    if (file != NULL) {
-        fclose(file);
-    }
-    // If the file doesn't exist
-    else {
-        fclose(file);
+    if (file == NULL) {
+        // If the file doesn't exist
         printf("Error: No such file exists, unable to show file\n");
+        return;
     }
+
+    // Use the number_of_lines function to get the total number of lines
+    int totalLines = number_of_lines(arguments);
+    if (totalLines == -1) {
+        // If an error occurs in number_of_lines
+        fclose(file);
+        printf("Error: Could not determine the number of lines in the file.\n");
+        return;
+    }
+
+    // Calculate the number of digits in the totalLines
+    int maxDigits = 1;
+    int temp = totalLines;
+    while (temp > 9) {
+        temp /= 10;
+        maxDigits++;
+    }
+
+    // Display each line with its line number
+    char line[1024];
+    int currentLine = 1;
+    while (fgets(line, sizeof(line), file) != NULL) {
+        // Remove newline character from the line (optional)
+        line[strcspn(line, "\n")] = '\0';
+
+        // Print line number with appropriate spacing
+        printf("%-*d| %s\n", maxDigits, currentLine, line);
+        currentLine++;
+    }
+
+    fclose(file); // Close the file
 }

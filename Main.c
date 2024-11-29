@@ -137,6 +137,14 @@ int main() {
         else if (strcmp(command, "show")==0) {
             show_file(arguments);
         }
+        else if (strcmp(command, "shownl")==0) {
+            int lines = number_of_lines(arguments); // Call the function to get the number of lines
+            if (lines >= 0) {
+                printf("The file '%s' contains %d line(s).\n", arguments, lines);
+            } else {
+                printf("Error: Could not determine the number of lines in the file.\n");
+            }
+        }
         else if (strcmp(command, "help")==0) {
             help();
         }
