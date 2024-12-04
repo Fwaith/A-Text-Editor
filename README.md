@@ -55,4 +55,6 @@ On macOS: /usr/local/bin/ate
 ### 2. Delete the source files
 Wherever you downloaded it
 
-## Commands
+## Operations
+
+##Additional Operations
