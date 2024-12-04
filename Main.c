@@ -161,7 +161,20 @@ int main() {
             show_line(arguments);
         }
         else if (strcmp(command, "log")==0) {
-            change_log();
+            // Open the changelog file
+            FILE *logFile = fopen("changelog.txt", "r");
+            if (logFile == NULL) {
+                // If the changelog file doesn't exist or cannot be opened
+                printf("Error: No changelog available.\n");
+                return;
+            }
+            // Read and display the contents of the changelog
+            printf("Change Log:\n");
+            char line[1024];
+            while (fgets(line, sizeof(line), logFile) != NULL) {
+                printf("%s", line); // Print each line from the changelog
+            }
+            fclose(logFile); // Close the changelog file
         }
         else if (strcmp(command, "show")==0) {
             show_file(arguments);
