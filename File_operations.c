@@ -8,8 +8,7 @@ void create_file(char arguments[]) {
         fclose(file);
         printf("Warning: File '%s' already exists, making a new file will overwrite the old one\n", arguments);
         printf("Proceed to overwrite file ? (y/n)\n");
-        printf(">>");
-        printf(" ");
+        printf(">> ");
         char conformation[10];
         fgets(conformation, sizeof(conformation), stdin);
         // Remove the newline character from the input
@@ -19,21 +18,24 @@ void create_file(char arguments[]) {
             file = fopen(arguments, "w");
             printf("'%s' created successfully\n", arguments);
             fclose(file);
-        }
-        // Cancels the file creation process
+            // Log the operation
+            change_log("create", arguments, "Overwritten existing file");
+        } 
         else if (strcmp(conformation, "n") == 0) {
             printf("File creation cancelled\n");
-        }
+        } 
         else {
             printf("Invalid input\n");
             printf("File creation cancelled\n");
         }
-    }
-    // If the file doesn't exist
+    } 
     else {
         file = fopen(arguments, "w");
         printf("'%s' created successfully\n", arguments);
         fclose(file);
+
+        // Log the operation
+        change_log("create", arguments, "Created new file");
     } 
 }
 
@@ -71,6 +73,10 @@ void copy_file(char arguments[]) {
     fclose(src);
     fclose(dest);
     printf("File successfully copied to '%s'.\n", copyName);
+    // Log the operation
+    char logDetails[512];
+    snprintf(logDetails, sizeof(logDetails), "Copied to '%s'", copyName);
+    change_log("copy", arguments, logDetails);
 }
 
 void delete_file(char arguments[]) {
@@ -81,12 +87,13 @@ void delete_file(char arguments[]) {
         // Attempt to delete the file
         if (remove(arguments) == 0) {
             printf("File '%s' deleted successfully.\n", arguments);
+            // Log the operation
+            change_log("delete", arguments, "Deleted file");
         } 
         else {
             printf("Error: Unable to delete file '%s'.\n", arguments);
         }
-    }
-    // If the file doesn't exist
+    } 
     else { 
         printf("Error: No such file exists, unable to delete file\n");
     }
@@ -99,7 +106,6 @@ void show_file(char arguments[]) {
         printf("Error: No such file exists, unable to show file\n");
         return;
     }
-
     // Use the number_of_lines function to get the total number of lines
     int totalLines = number_of_lines(arguments);
     if (totalLines == -1) {
@@ -108,7 +114,6 @@ void show_file(char arguments[]) {
         printf("Error: Could not determine the number of lines in the file.\n");
         return;
     }
-
     // Calculate the number of digits in the totalLines
     int maxDigits = 1;
     int temp = totalLines;
@@ -116,18 +121,19 @@ void show_file(char arguments[]) {
         temp /= 10;
         maxDigits++;
     }
-
     // Display each line with its line number
     char line[1024];
     int currentLine = 1;
     while (fgets(line, sizeof(line), file) != NULL) {
         // Remove newline character from the line (optional)
         line[strcspn(line, "\n")] = '\0';
-
         // Print line number with appropriate spacing
         printf("%-*d| %s\n", maxDigits, currentLine, line);
         currentLine++;
     }
-
     fclose(file); // Close the file
+    // Log the operation
+    char logDetails[512];
+    snprintf(logDetails, sizeof(logDetails), "Displayed file content with %d lines", totalLines);
+    change_log("view", arguments, logDetails);
 }

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -92,12 +93,19 @@ void help() {
     printf("\nTo enter a command, type ate <command>\n");
     printf("\tExample: ate help\n");
     printf("\nate (by itself) - Opens the editor\n");
+    printf("append <file name> - Specifies the file to append a line to\n");
     printf("create <file name> - Creates a single file given that it doesn't already exist\n");
     printf("copy <file name> - Creates a copy of a file\n");
     printf("delete <file name> - Deletes a file\n");
     printf("exit - Exits and ends the current running instance of the editor\n");
     printf("help - Displays all the commands along with its description\n");
+    printf("insert <file name> - Specifies the file to insert a line of text");
     printf("listf - Lists all files in the current directory along with other relevant information\n");
+    printf("lndelete <file name> - Specifies the file to delete a particular line of text\n");
+    printf("lnshow <file name> - Specicfies the file to show a particular line of text\n");
+    printf("log - Shows the change log; the actions performed by the editor in chronological order");
+    printf("show - Shows the contents of a file along with the line numbers\n");
+    printf("shownl - Shows the number of lines in a specified file\n");
 }
 
 int main() {
@@ -125,6 +133,9 @@ int main() {
         if (strcmp(command, "exit")==0) {
             running = 1;
         }
+        else if (strcmp(command, "append")==0) {
+            append_line(arguments);
+        }
         else if (strcmp(command, "create")==0) {
             create_file(arguments);
         }
@@ -134,22 +145,35 @@ int main() {
         else if (strcmp(command, "delete")==0) {
             delete_file(arguments);
         }
-        else if (strcmp(command, "show")==0) {
-            show_file(arguments);
-        }
-        else if (strcmp(command, "shownl")==0) {
-            int lines = number_of_lines(arguments); // Call the function to get the number of lines
-            if (lines >= 0) {
-                printf("The file '%s' contains %d line(s).\n", arguments, lines);
-            } else {
-                printf("Error: Could not determine the number of lines in the file.\n");
-            }
-        }
         else if (strcmp(command, "help")==0) {
             help();
         }
+        else if (strcmp(command, "insert")==0) {
+            insert_line(arguments);
+        }
         else if (strcmp(command, "listf")==0) {
             listf();
+        }
+        else if (strcmp(command, "lndelete")==0) {
+            delete_line(arguments);
+        }
+        else if (strcmp(command, "lnshow")==0) {
+            show_line(arguments);
+        }
+        else if (strcmp(command, "log")==0) {
+            change_log();
+        }
+        else if (strcmp(command, "show")==0) {
+            show_file(arguments);
+        }
+        else if (strcmp(command, "shownnl")==0) {
+            int lines = number_of_lines(arguments); // Call the function to get the number of lines
+            if (lines >= 0) {
+                printf("The file '%s' contains %d line(s).\n", arguments, lines);
+            } 
+            else {
+                printf("Error: Could not determine the number of lines in the file.\n");
+            }
         }
         else {
             printf("Error: Invalid command\n");
