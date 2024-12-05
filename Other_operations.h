@@ -20,6 +20,6 @@ int number_of_lines(char arguments[]);
 
 void listf();
 
-void show_file(char arguments[]);
+void search_file(char arguments[]);
 
 #endif

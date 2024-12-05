@@ -1,60 +1,31 @@
 #include "Other_operations.h"
 
-// Cross-platform function to resolve the full path of a file
-void resolve_full_path(const char *filePath, char *resolvedPath, size_t size) {
-#ifdef _WIN32
-    // Use _fullpath for Windows
-    if (_fullpath(resolvedPath, filePath, size) == NULL) {
-        // Fallback: Copy filePath if _fullpath fails
-        strncpy(resolvedPath, filePath, size - 1);
-        resolvedPath[size - 1] = '\0';
-    }
-#else
-    // Use realpath for Unix-like systems
-    if (realpath(filePath, resolvedPath) == NULL) {
-        // Fallback: Copy filePath if realpath fails
-        strncpy(resolvedPath, filePath, size - 1);
-        resolvedPath[size - 1] = '\0';
-    }
-#endif
-}
-
 // Change log function
 void change_log(const char *operation, const char *filePath, const char *details) {
-    char installDir[1024];
     char changelogPath[1024];
-    // Read the installation path from install_path.txt
-    FILE *configFile = fopen("C:\\Users\\imana\\A-Text-Editor\\install_path.txt", "r");
-    if (configFile == NULL) {
-        printf("Error: Configuration file not found. Please reinstall 'ate'.\n");
-        return;
-    }
-    if (fgets(installDir, sizeof(installDir), configFile) == NULL) {
-        printf("Error: Could not read installation path from configuration.\n");
-        fclose(configFile);
-        return;
-    }
-    fclose(configFile);
-    // Remove newline character from the installation path (if any)
-    installDir[strcspn(installDir, "\n")] = '\0';
-    // Construct the path for changelog.txt
-    snprintf(changelogPath, sizeof(changelogPath), "%s\\changelog.txt", installDir);
-    // Open the changelog file in append mode
-    FILE *logFile = fopen(changelogPath, "a");
+    FILE *logFile = NULL;
+    // Construct the path for changelog.txt in the current working directory
+#ifdef _WIN32
+    snprintf(changelogPath, sizeof(changelogPath), ".\\changelog.txt");
+#else
+    snprintf(changelogPath, sizeof(changelogPath), "./changelog.txt");
+#endif
+    // Open the changelog file in append mode, creating it if it doesn't exist
+    logFile = fopen(changelogPath, "a");
     if (logFile == NULL) {
-        printf("Error: Unable to open changelog file at '%s'.\n", changelogPath);
-        return;
+        printf("Error: Unable to create or open changelog file at '%s'. Check your permissions.\n", changelogPath);
+    } 
+    else {
+        // Get the current timestamp
+        time_t now = time(NULL);
+        char timeStamp[20];
+        strftime(timeStamp, sizeof(timeStamp), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        // Write the log entry
+        fprintf(logFile, "[%s] Operation: %s, File: %s, Changes: %s\n", timeStamp, operation, filePath, details);
+        fclose(logFile);
+        printf("Logged operation to '%s'.\n", changelogPath);
     }
-    // Get the current timestamp
-    time_t now = time(NULL);
-    char timeStamp[20];
-    strftime(timeStamp, sizeof(timeStamp), "%Y-%m-%d %H:%M:%S", localtime(&now));
-    // Write the log entry
-    fprintf(logFile, "[%s] Operation: %s, File: %s, Changes: %s\n", timeStamp, operation, filePath, details);
-    fclose(logFile);
-    printf("Logged operation to '%s'.\n", changelogPath);
 }
-
 
 int number_of_lines(char arguments[]) {
     FILE *file = fopen(arguments, "r"); // Open the file in read mode

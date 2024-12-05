@@ -39,46 +39,51 @@ int is_installed() {
 
 // Installs ate
 void install() {
-    const char *installDir = "C:\\Users\\imana\\A-Text-Editor"; // Install path is fixed
+    char installDir[1024];
     char changelogPath[1024];
     char configFilePath[1024];
     char command[512];
-    // Construct the paths for the changelog.txt and install_path.txt
-    snprintf(changelogPath, sizeof(changelogPath), "%s\\changelog.txt", installDir);
-    snprintf(configFilePath, sizeof(configFilePath), "%s\\install_path.txt", installDir);
-    // Verify the installation directory exists
+    FILE *logFile = NULL;
+    FILE *configFile = NULL;
+    // Get the current working directory
+    if (getcwd(installDir, sizeof(installDir)) == NULL) {
+        perror("Error: Unable to get the current working directory");
+        return;
+    }
+    // Append the subdirectory for the installation if not already present
 #ifdef _WIN32
-    if (mkdir(installDir) == 0) {
-        printf("Created directory: %s\n", installDir);
-    } 
-    else {
-        printf("Directory already exists: %s\n", installDir);
+    if (!strstr(installDir, "A-Text-Editor")) {
+        snprintf(installDir, sizeof(installDir), "%s\\A-Text-Editor", installDir);
     }
 #else
-    if (mkdir(installDir, 0777) == 0) {
-        printf("Created directory: %s\n", installDir);
-    } 
-    else {
-        printf("Directory already exists: %s\n", installDir);
+    if (!strstr(installDir, "A-Text-Editor")) {
+        snprintf(installDir, sizeof(installDir), "%s/A-Text-Editor", installDir);
     }
 #endif
+    // Construct paths for changelog.txt and install_path.txt
+    snprintf(changelogPath, sizeof(changelogPath), "%s/changelog.txt", installDir);
+    snprintf(configFilePath, sizeof(configFilePath), "%s/install_path.txt", installDir);
+    // Notify about the directory assumption
+    printf("Directory exists or assumed to exist: %s\n", installDir);
     // Create or verify the changelog.txt file
-    FILE *logFile = fopen(changelogPath, "a");
+    logFile = fopen(changelogPath, "a");
     if (logFile == NULL) {
-        printf("Error: Could not create changelog file. Check your permissions.\n");
-        return;
+        printf("Error: Could not create or open changelog file at '%s'. Check your permissions.\n", changelogPath);
+    } 
+    else {
+        fclose(logFile);
+        printf("Changelog file ready at '%s'.\n", changelogPath);
     }
-    fclose(logFile);
-    printf("Changelog file ready at '%s'.\n", changelogPath);
     // Save the installation path in install_path.txt
-    FILE *configFile = fopen(configFilePath, "w");
+    configFile = fopen(configFilePath, "w");
     if (configFile == NULL) {
-        printf("Error: Unable to save installation path configuration.\n");
-        return;
+        printf("Error: Unable to save installation path configuration at '%s'.\n", configFilePath);
+    } 
+    else {
+        fprintf(configFile, "%s\n", installDir); // Save the installation directory path
+        fclose(configFile);
+        printf("Installation directory saved to '%s'.\n", configFilePath);
     }
-    fprintf(configFile, "%s\n", installDir); // Save the installation directory path
-    fclose(configFile);
-    printf("Installation directory saved to '%s'.\n", configFilePath);
     // Install the ate executable (DO NOT MODIFY THIS PART)
 #ifdef _WIN32
     snprintf(command, sizeof(command), "copy \"%s\" \"%s\"", INSTALL_PATH_SRC, INSTALL_PATH);
@@ -137,8 +142,9 @@ void help() {
     printf("insert <file name> - Specifies the file to insert a line of text\n");
     printf("listf - Lists all files in the current directory along with other relevant information\n");
     printf("lndelete <file name> - Specifies the file to delete a particular line of text\n");
-    printf("lnshow <file name> - Specicfies the file to show a particular line of text\n");
+    printf("lnshow <file name> - Specifies the file to show a particular line of text\n");
     printf("log - Shows the change log; the actions performed by the editor in chronological order\n");
+    printf("search <file name> - Specifies the file to be searched for a string\n");
     printf("show - Shows the contents of a file along with the line numbers\n");
     printf("shownl - Shows the number of lines in a specified file\n");
 }
@@ -160,10 +166,7 @@ int main() {
         // Removes newline character
         input[strcspn(input, "\n")] = 0;
         // Splits input to its 'command' and 'argument'
-        split_input(input, command, arguments);
-        // To help see what the command and argument is (will remove later)
-        printf("Command: %s\n", command);
-        printf("Arguments: %s\n", arguments);   
+        split_input(input, command, arguments);   
         // Checks the command
         if (strcmp(command, "exit")==0) {
             running = 1;
@@ -196,39 +199,39 @@ int main() {
             show_line(arguments);
         }
         else if (strcmp(command, "log") == 0) {
-            char installDir[1024];
             char changelogPath[1024];
-            // Locate install_path.txt in the current directory
-            FILE *configFile = fopen("install_path.txt", "r");
-            if (configFile == NULL) {
-                printf("Error: Configuration file 'install_path.txt' not found. Please reinstall 'ate'.\n");
-                return;
-            }
-            // Read the installation directory from install_path.txt
-            if (fgets(installDir, sizeof(installDir), configFile) == NULL) {
-                printf("Error: Could not read installation path from 'install_path.txt'.\n");
-                fclose(configFile);
-                return;
-            }
-            fclose(configFile);
-            // Remove newline character from the installation path (if any)
-            installDir[strcspn(installDir, "\n")] = '\0';
-            // Construct the path for changelog.txt
-            snprintf(changelogPath, sizeof(changelogPath), "%s/changelog.txt", installDir);
-            // Open the changelog file
-            FILE *logFile = fopen(changelogPath, "r");
+            FILE *logFile = NULL;
+            // Construct the path for changelog.txt in the current working directory
+        #ifdef _WIN32
+            snprintf(changelogPath, sizeof(changelogPath), ".\\changelog.txt");
+        #else
+            snprintf(changelogPath, sizeof(changelogPath), "./changelog.txt");
+        #endif
+            // Attempt to open the changelog file
+            logFile = fopen(changelogPath, "r");
             if (logFile == NULL) {
-                // If the changelog file doesn't exist or cannot be opened
-                printf("Error: No changelog available at '%s'.\n", changelogPath);
-                return;
+                // If the changelog file doesn't exist, create it
+                printf("No changelog found. Creating a new changelog file at '%s'.\n", changelogPath);
+                logFile = fopen(changelogPath, "w");
+                if (logFile == NULL) {
+                    printf("Error: Unable to create changelog file at '%s'. Check your permissions.\n", changelogPath);
+                } 
+                else {
+                    printf("Changelog file created successfully at '%s'.\n", changelogPath);
+                    fclose(logFile);
+                    logFile = NULL;
+                }
+            } 
+            else {
+                // Read and display the contents of the existing changelog
+                printf("Change Log:\n");
+                char line[1024];
+                while (fgets(line, sizeof(line), logFile) != NULL) {
+                    printf("%s", line); // Print each line from the changelog
+                }
+                fclose(logFile); // Close the changelog file
+                logFile = NULL;
             }
-            // Read and display the contents of the changelog
-            printf("Change Log:\n");
-            char line[1024];
-            while (fgets(line, sizeof(line), logFile) != NULL) {
-                printf("%s", line); // Print each line from the changelog
-            }
-            fclose(logFile); // Close the changelog file
         }
         else if (strcmp(command, "search")==0) {
             search_file(arguments);
