@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <direct.h>
 #include <time.h>
 
 #ifdef _WIN32
@@ -42,17 +43,47 @@ void install() {
         return;
     }
     char command[512];
+    char currentDir[1024];
+    // Get the current working directory
+    if (getcwd(currentDir, sizeof(currentDir)) == NULL) {
+        printf("Error: Unable to get the current working directory.\n");
+        return;
+    }
+    // Construct the path for the changelog
+    char changelogPath[1024];
+    snprintf(changelogPath, sizeof(changelogPath), "%s/A-Text-Editor/changelog.txt", currentDir);
 
-// For Windows devices
+    // Create the A-Text-Editor folder and changelog file
+#ifdef _WIN32
+    snprintf(command, sizeof(command), "mkdir \"%s\\A-Text-Editor\" && echo \"\" > \"%s\"", currentDir, changelogPath);
+#else
+    snprintf(command, sizeof(command), "mkdir -p \"%s/A-Text-Editor\" && touch \"%s\"", currentDir, changelogPath);
+#endif
+
+    if (system(command) != 0) {
+        printf("Error: Could not create changelog file. Check your permissions.\n");
+        return;
+    }
+    printf("Changelog file created at '%s'.\n", changelogPath);
+    // Save the changelog path to a configuration file
+    FILE *configFile = fopen("ate_config.txt", "w");
+    if (configFile == NULL) {
+        printf("Error: Unable to save changelog path configuration.\n");
+        return;
+    }
+    fprintf(configFile, "CHANGELOG_PATH=%s\n", changelogPath);
+    fclose(configFile);
+    printf("Configuration file saved for changelog path.\n");
+
+    // Install the ate command
 #ifdef _WIN32
     snprintf(command, sizeof(command), "copy \"%s\" \"%s\"", INSTALL_PATH_SRC, INSTALL_PATH);
     if (system(command) == 0) {
         printf("Successfully installed 'ate' command. You can now use it globally.\n");
-    }
+    } 
     else {
         printf("Error: Failed to install 'ate'. Try running as Administrator.\n");
     }
-// For macOS devices
 #else
     snprintf(command, sizeof(command), "sudo mv \"%s\" \"%s\"", INSTALL_PATH_SRC, INSTALL_PATH);
     if (system(command) == 0) {
@@ -96,14 +127,14 @@ void help() {
     printf("append <file name> - Specifies the file to append a line to\n");
     printf("create <file name> - Creates a single file given that it doesn't already exist\n");
     printf("copy <file name> - Creates a copy of a file\n");
-    printf("delete <file name> - Deletes a file\n");
+    printf("delete <file name> - Deletes the specified file\n");
     printf("exit - Exits and ends the current running instance of the editor\n");
     printf("help - Displays all the commands along with its description\n");
-    printf("insert <file name> - Specifies the file to insert a line of text");
+    printf("insert <file name> - Specifies the file to insert a line of text\n");
     printf("listf - Lists all files in the current directory along with other relevant information\n");
     printf("lndelete <file name> - Specifies the file to delete a particular line of text\n");
     printf("lnshow <file name> - Specicfies the file to show a particular line of text\n");
-    printf("log - Shows the change log; the actions performed by the editor in chronological order");
+    printf("log - Shows the change log; the actions performed by the editor in chronological order\n");
     printf("show - Shows the contents of a file along with the line numbers\n");
     printf("shownl - Shows the number of lines in a specified file\n");
 }
@@ -166,20 +197,21 @@ int main() {
             if (logFile == NULL) {
                 // If the changelog file doesn't exist or cannot be opened
                 printf("Error: No changelog available.\n");
-                return;
             }
             // Read and display the contents of the changelog
-            printf("Change Log:\n");
-            char line[1024];
-            while (fgets(line, sizeof(line), logFile) != NULL) {
-                printf("%s", line); // Print each line from the changelog
+            else {
+                printf("Change Log:\n");
+                char line[1024];
+                while (fgets(line, sizeof(line), logFile) != NULL) {
+                    printf("%s", line); // Print each line from the changelog
+                }
             }
             fclose(logFile); // Close the changelog file
         }
         else if (strcmp(command, "show")==0) {
             show_file(arguments);
         }
-        else if (strcmp(command, "shownnl")==0) {
+        else if (strcmp(command, "shownl")==0) {
             int lines = number_of_lines(arguments); // Call the function to get the number of lines
             if (lines >= 0) {
                 printf("The file '%s' contains %d line(s).\n", arguments, lines);

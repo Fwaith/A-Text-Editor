@@ -1,21 +1,53 @@
 #include "Other_operations.h"
 
+void resolve_full_path(const char *filePath, char *fullPath, size_t size) {
+    #ifdef _WIN32
+    // Use _fullpath for Windows
+    _fullpath(fullPath, filePath, size);
+    #else
+    // Use realpath for Unix/Linux
+    realpath(filePath, fullPath);
+    #endif
+}
+
 void change_log(const char *operation, const char *filePath, const char *details) {
-    FILE *logFile = fopen("changelog.txt", "a");
+    char fullPath[1024];
+    char changelogPath[1024];
+    char currentDir[1024];
+    // Resolve full path of the file being logged
+    if (realpath(filePath, fullPath) == NULL) {
+        // Fallback if realpath fails
+        snprintf(fullPath, sizeof(fullPath), "%s", filePath);
+    }
+    // Get the current working directory
+    if (getcwd(currentDir, sizeof(currentDir)) == NULL) {
+        printf("Error: Unable to get the current working directory.\n");
+        return;
+    }
+    // Construct path for changelog.txt in the A-Text-Editor folder
+    snprintf(changelogPath, sizeof(changelogPath), "%s/A-Text-Editor/changelog.txt", currentDir);
+
+    // Ensure the A-Text-Editor folder exists
+#ifdef _WIN32
+    _mkdir("A-Text-Editor");
+#else
+    mkdir("A-Text-Editor", 0777);
+#endif
+
+    // Open the changelog file in append mode
+    FILE *logFile = fopen(changelogPath, "a");
     if (logFile == NULL) {
-        printf("Error: Unable to open changelog file.\n");
+        printf("Error: Unable to open or create changelog file at '%s'.\n", changelogPath);
         return;
     }
     // Get the current timestamp
     time_t now = time(NULL);
     char timeStamp[20];
     strftime(timeStamp, sizeof(timeStamp), "%Y-%m-%d %H:%M:%S", localtime(&now));
-    // Get the full directory path
-    char fullPath[1024];
-    realpath(filePath, fullPath); // Resolves the full directory path
     // Write the log entry
     fprintf(logFile, "[%s] Operation: %s, File: %s, Changes: %s\n", timeStamp, operation, fullPath, details);
     fclose(logFile);
+    printf("Logged operation to '%s'.\n", changelogPath);
 }
 
 int number_of_lines(char arguments[]) {

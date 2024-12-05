@@ -109,15 +109,18 @@ void insert_line(char arguments[]) {
     printf("Line inserted successfully into '%s'\n", arguments);
 }
 
-// Displays a specific line from the file
 void show_line(char arguments[]) {
     printf("line: ");
     int lineNumber;
-    scanf("%d");
+    if (scanf("%d", &lineNumber) != 1 || lineNumber <= 0) { // Validate input
+        printf("Error: Invalid line number.\n");
+        getchar(); // Clear invalid input from buffer
+        return;
+    }
     getchar(); // Clear the newline character from the input buffer
     FILE *file = fopen(arguments, "r");
     if (file == NULL) {
-        printf("Error: Unable to open file '%s' to show line\n", arguments);
+        printf("Error: Unable to open file '%s' to show line.\n", arguments);
         return;
     }
     int currentLine = 1;
@@ -130,12 +133,12 @@ void show_line(char arguments[]) {
             char logDetails[1024];
             snprintf(logDetails, sizeof(logDetails), "Viewed line %d: '%s'", lineNumber, line);
             change_log("view", arguments, logDetails);
-
             fclose(file);
             return;
         }
         currentLine++;
     }
     fclose(file);
+    // If the specified line does not exist
     printf("Error: Line %d does not exist in the file.\n", lineNumber);
 }
