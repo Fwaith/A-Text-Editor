@@ -2,7 +2,8 @@
 
 ## Prerequisites
 **Note: Not all of these are necessary, some are here purely for convenience.**
-**Note: The program was not able to be tested on macOS and so there is no guarantee that it will run smoothly. For the best experience, use Windows.**
+
+**Note: The program was not able to be tested on macOS so there is no guarantee that it will run smoothly. For the best experience, use Windows.**
 ### A Package Manager
 To make downloading easy. In this guide [git (not a package manager)](https://github.com/git-guides/install-git) is used.
 ### A C Language Compiler
@@ -57,5 +58,21 @@ On macOS: /usr/local/bin/ate
 Wherever you downloaded it
 
 ## Operations
+
+ate (by itself) - Opens the editor
+append <file name> - Specifies the file to append a line to
+create <file name> - Creates a single file given that it doesn't already exist
+copy <file name> - Creates a copy of a file
+delete <file name> - Deletes the specified file
+exit - Exits and ends the current running instance of the editor
+help - Displays all the commands along with its description
+insert <file name> - Specifies the file to insert a line of text
+listf - Lists all files in the current directory along with other relevant information
+lndelete <file name> - Specifies the file to delete a particular line of text
+lnshow <file name> - Specifies the file to show a particular line of text
+log - Shows the change log; the actions performed by the editor in chronological order
+search <file name> - Specifies the file to search for a string
+show - Shows the contents of a file along with the line numbers
+shownl - Shows the number of lines in a specified file
 
 ## Additional Operations
