@@ -48,6 +48,8 @@ Check the spelling of the name, or if a path was included, verify that the path 
 
 Then that means step 2 was done incorrectly.
 
+If the program runs without any issues but there are errors, simply ignore the errors
+
 ## Deletion
 
 ### 1. Delete the executable
