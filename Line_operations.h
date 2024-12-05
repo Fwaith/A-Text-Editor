@@ -6,12 +6,12 @@
 #include <time.h>
 #include <stdlib.h>
 
-void append_line();
+void append_line(char arguments[]);
 
-void delete_line();
+void delete_line(char arguments[]);
 
-void insert_line();
+void insert_line(char arguments[]);
 
-void show_line();
+void show_line(char arguments[]);
 
 #endif
