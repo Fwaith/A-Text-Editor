@@ -2,6 +2,7 @@
 
 ## Prerequisites
 **Note: Not all of these are necessary, some are here purely for convenience.**
+**Note: The program was not able to be tested on macOS and so there is no guarantee that it will run smoothly. For the best experience, use Windows.**
 ### A Package Manager
 To make downloading easy. In this guide [git (not a package manager)](https://github.com/git-guides/install-git) is used.
 ### A C Language Compiler
@@ -57,4 +58,4 @@ Wherever you downloaded it
 
 ## Operations
 
-##Additional Operations
+## Additional Operations
