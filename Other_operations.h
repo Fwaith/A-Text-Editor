@@ -2,15 +2,16 @@
 #define OTHER_OPERATIONS_H
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <stdlib.h>
 
 #ifdef _WIN32
-#include <direct.h> // For _getcwd
+#include <direct.h> // For _getcwd and _fullpath
 #define getcwd _getcwd
 #else
-#include <unistd.h> // For getcwd
+#include <unistd.h> // For getcwd and realpath
+#include <limits.h> // For PATH_MAX
 #endif
 
 void change_log(const char *operation, const char *filePath, const char *details);
