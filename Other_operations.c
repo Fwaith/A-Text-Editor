@@ -1,13 +1,21 @@
 #include "Other_operations.h"
 
-void resolve_full_path(const char *filePath, char *fullPath, size_t size) {
-    #ifdef _WIN32
+void resolve_full_path(const char *filePath, char *resolvedPath, size_t size) {
+#ifdef _WIN32
     // Use _fullpath for Windows
-    _fullpath(fullPath, filePath, size);
-    #else
-    // Use realpath for Unix/Linux
-    realpath(filePath, fullPath);
-    #endif
+    if (_fullpath(resolvedPath, filePath, size) == NULL) {
+        // Fallback: Copy filePath if _fullpath fails
+        strncpy(resolvedPath, filePath, size - 1);
+        resolvedPath[size - 1] = '\0';
+    }
+#else
+    // Use realpath for Unix-like systems
+    if (realpath(filePath, resolvedPath) == NULL) {
+        // Fallback: Copy filePath if realpath fails
+        strncpy(resolvedPath, filePath, size - 1);
+        resolvedPath[size - 1] = '\0';
+    }
+#endif
 }
 
 void change_log(const char *operation, const char *filePath, const char *details) {
